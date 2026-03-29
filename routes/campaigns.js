@@ -3,6 +3,8 @@ const router = express.Router();
 const nodemailer = require('nodemailer');
 const { mockSettings } = require('./settings');
 const { mockContacts } = require('./contacts');
+const templatesRouter = require('./templates');
+const mockTemplates = templatesRouter.mockTemplates;
 
 // Mock campaigns data
 let mockCampaigns = [
@@ -212,13 +214,24 @@ router.post('/:id/send', async (req, res) => {
     // Send emails to each contact
     for (const contact of campaignContacts) {
       try {
+        // Get the template HTML if templateId exists
+        let templateHtml = '';
+        if (campaign.templateId) {
+          const template = mockTemplates.find(t => t._id === campaign.templateId);
+          if (template) {
+            templateHtml = template.html || '';
+          }
+        }
+
         const personalizedHtml = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #4fc3f7;">Hello ${contact.name || 'Valued Customer'},</h2>
-            <p>This email is from campaign: <strong>${campaign.name}</strong></p>
-            <p>${campaign.subject}</p>
-            <p>Company: ${contact.company || 'N/A'}</p>
-            <hr style="border: 1px solid #eee;">
+            ${templateHtml || `
+              <h2 style="color: #4fc3f7;">Hello ${contact.name || 'Valued Customer'},</h2>
+              <p>This email is from campaign: <strong>${campaign.name}</strong></p>
+              <p>${campaign.subject}</p>
+              <p>Company: ${contact.company || 'N/A'}</p>
+            `}
+            <hr style="border: 1px solid #eee; margin: 20px 0;">
             <p style="color: #666; font-size: 12px;">Sent from SHOWBAY Email Marketing System</p>
           </div>
         `;

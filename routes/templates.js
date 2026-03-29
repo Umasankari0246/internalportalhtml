@@ -82,11 +82,46 @@ let mockTemplates = [
     name: 'Holiday Special',
     type: 'builder',
     title: 'Holiday Special Offer',
-    bodyContent: 'Special holiday discounts on all our products. Limited time offer - don\'t miss out!',
+    bodyContent: 'Special holiday discounts on all our services!',
     imageUrl: '/images/templates/holiday-special.jpg',
     buttonText: 'Shop Now',
-    buttonLink: 'https://showbay.com/shop',
+    buttonLink: 'https://showbay.com/holiday',
     createdAt: new Date('2024-03-24')
+  },
+  {
+    _id: 'conf-001',
+    name: 'Conference Invitation',
+    type: 'predesigned',
+    html: '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Conference</title></head><body style="margin:0;padding:20px;font-family:Arial"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px"><div style="background:#1a237e;color:white;padding:40px;text-align:center"><h1>&#x1F3AC; Annual Tech Conference 2024</h1><p>Join industry leaders</p></div><div style="padding:40px"><img src="/images/templates/conference-banner.jpg" style="width:100%;border-radius:8px"><h2>Event Details</h2><p><strong>Date:</strong> March 30, 2024</p><p><strong>Time:</strong> 9:00 AM - 6:00 PM</p><p><strong>Location:</strong> Tech Convention Center</p><div style="text-align:center;margin:30px 0"><a href="#" style="background:#4fc3f7;color:#0a0e27;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:600">RSVP Now</a></div></div></div></body></html>',
+    createdAt: new Date('2024-03-23')
+  },
+  {
+    _id: 'workshop-001',
+    name: 'Workshop Promotion',
+    type: 'predesigned',
+    html: '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Workshop</title></head><body style="margin:0;padding:20px;font-family:Arial"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px"><div style="background:#4caf50;color:white;padding:40px;text-align:center"><h1>&#x1F6E0; Advanced Web Development Workshop</h1><p>Master modern web technologies</p></div><div style="padding:40px"><img src="/images/templates/workshop-promo.jpg" style="width:100%;border-radius:8px"><h3>What You’ll Learn:</h3><p>• React & Next.js best practices<br>• Advanced CSS techniques<br>• Performance optimization</p><div style="text-align:center;margin:30px 0"><a href="#" style="background:#4caf50;color:white;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:600">Register Now</a></div></div></div></body></html>',
+    createdAt: new Date('2024-03-22')
+  },
+  {
+    _id: 'corp-001',
+    name: 'Corporate Event Announcement',
+    type: 'predesigned',
+    html: '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Corporate Event</title></head><body style="margin:0;padding:20px;font-family:Arial"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px"><div style="background:#2c3e50;color:white;padding:40px;text-align:center"><h1>&#x1F3E2; Quarterly Meeting</h1><p>Strategic planning session</p></div><div style="padding:40px"><img src="/images/templates/corporate-event.jpg" style="width:100%;border-radius:8px"><h3>Meeting Details:</h3><p><strong>Date:</strong> April 15, 2024</p><p><strong>Time:</strong> 2:00 PM - 5:00 PM</p><p><strong>Location:</strong> Corporate HQ</p><div style="text-align:center;margin:30px 0"><a href="#" style="background:#2c3e50;color:white;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:600">Confirm Attendance</a></div></div></div></body></html>',
+    createdAt: new Date('2024-03-21')
+  },
+  {
+    _id: 'product-001',
+    name: 'Product Launch Email',
+    type: 'predesigned',
+    html: '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Product Launch</title></head><body style="margin:0;padding:20px;font-family:Arial"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px"><div style="background:#ff6b6b;color:white;padding:40px;text-align:center"><h1>&#x1F680; Product Launch: TechPro X1</h1><p>Revolutionary new product</p></div><div style="padding:40px"><img src="/images/templates/product-launch.jpg" style="width:100%;border-radius:8px"><h2>Revolutionary Features</h2><p>&#x26A1; Lightning Fast Processing<br>&#x1F510; Enterprise Security<br>&#x1F4C8; User-Friendly Interface</p><div style="text-align:center;margin:30px 0"><a href="#" style="background:#ff6b6b;color:white;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:600">Pre-Order Now</a></div></div></div></body></html>',
+    createdAt: new Date('2024-03-20')
+  },
+  {
+    _id: 'discount-001',
+    name: 'Discount/Offer Email',
+    type: 'predesigned',
+    html: '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Special Offer</title></head><body style="margin:0;padding:20px;font-family:Arial"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px"><div style="background:#e91e63;color:white;padding:40px;text-align:center"><h1>&#x1F389; BLACK FRIDAY SPECIAL</h1><p>Biggest sale of the year</p></div><div style="padding:40px"><img src="/images/templates/discount-offer.jpg" style="width:100%;border-radius:8px"><div style="background:#fff3e0;padding:30px;text-align:center"><div style="background:#e91e63;color:white;padding:8px 16px;border-radius:50px;font-weight:bold;font-size:24px">50% OFF</div><h2>Everything Must Go!</h2></div><div style="text-align:center;margin:30px 0"><a href="#" style="background:#e91e63;color:white;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:600">Shop Now</a></div></div></div></body></html>',
+    createdAt: new Date('2024-03-19')
   }
 ];
 
@@ -294,3 +329,4 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.mockTemplates = mockTemplates;
