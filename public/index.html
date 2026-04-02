@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHOWBAY — Email Marketing System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-name">SHOWBAY</span>
+    <span class="brand-sub">Email Marketing</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="#dashboard" class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">⬛</span> Dashboard
+    </a>
+    <a href="#contacts" class="nav-item" data-page="contacts">
+      <span class="nav-icon">👥</span> Contacts
+    </a>
+    <a href="#templates" class="nav-item" data-page="templates">
+      <span class="nav-icon">🎨</span> Templates
+    </a>
+    <a href="#campaigns" class="nav-item" data-page="campaigns">
+      <span class="nav-icon">📢</span> Campaigns
+    </a>
+    <a href="#settings" class="nav-item" data-page="settings">
+      <span class="nav-icon">⚙️</span> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info" id="userInfo">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div class="user-details">
+        <div class="user-name" id="userName">Admin</div>
+        <div class="user-role">Marketing Staff</div>
+      </div>
+    </div>
+    <button class="btn-logout" id="logoutBtn">Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="connection-status" id="connStatus">
+        <span class="status-dot"></span> Connected
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+  <div class="page-content" id="appContent">
+    <!-- Rendered by JS -->
+  </div>
+</main>
+
+<!-- MODAL OVERLAY -->
+<div class="modal-overlay" id="modalOverlay" style="display:none">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ANIMATED BACKGROUND ELEMENTS -->
+<div class="particles-container" id="particles"></div>
+<div class="wireframe-cube" id="wireframeCube"></div>
+
+<script src="/js/particles.js"></script>
+<script src="/js/animations.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/contacts.js"></script>
+<script src="/js/templates.js"></script>
+<script src="/js/campaigns.js"></script>
+<script src="/js/settings.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
