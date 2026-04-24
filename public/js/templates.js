@@ -292,7 +292,16 @@ const TemplatesPage = {
     const canvas = document.getElementById('builderCanvas');
     canvas.addEventListener('click', (e) => {
       if (e.target.id && e.target.id.startsWith('builder-element-')) {
-        this.selectBuilderElement(e.target.id);
+        // For text elements, select but allow editing
+        if (e.target.getAttribute('contenteditable') === 'true') {
+          this.selectBuilderElement(e.target.id);
+          // Focus the text element for editing
+          setTimeout(() => {
+            e.target.focus();
+          }, 100);
+        } else {
+          this.selectBuilderElement(e.target.id);
+        }
       } else if (e.target === canvas) {
         this.deselectAllBuilderElements();
       }
@@ -1000,6 +1009,13 @@ const TemplatesPage = {
     }
   },
 
+  updateVisualTextContent(elementId, content) {
+    const element = this.canvasElements.find(el => el.id === elementId);
+    if (element) {
+      element.content = content;
+    }
+  },
+
   uploadBuilderImageForElement(elementId) {
     const input = document.createElement('input');
     input.type = 'file';
@@ -1488,7 +1504,16 @@ const TemplatesPage = {
     const canvas = document.getElementById('visualCanvas');
     canvas.addEventListener('click', (e) => {
       if (e.target.id && e.target.id.startsWith('element-')) {
-        this.selectElement(e.target.id);
+        // For text elements, select but allow editing
+        if (e.target.getAttribute('contenteditable') === 'true') {
+          this.selectElement(e.target.id);
+          // Focus the text element for editing
+          setTimeout(() => {
+            e.target.focus();
+          }, 100);
+        } else {
+          this.selectElement(e.target.id);
+        }
       } else if (e.target === canvas) {
         this.deselectAll();
       }
@@ -1618,7 +1643,7 @@ const TemplatesPage = {
     
     switch(element.type) {
       case 'text':
-        html = `<div id="${element.id}" contenteditable="true" style="position:absolute;left:${element.x}px;top:${element.y}px;width:${element.width}px;height:${element.height}px;font-size:${element.fontSize}px;font-family:${element.fontFamily};color:${element.color};font-weight:${element.fontWeight};text-align:${element.textAlign};border:2px solid transparent;cursor:move;padding:4px;">${element.content}</div>`;
+        html = `<div id="${element.id}" contenteditable="true" style="position:absolute;left:${element.x}px;top:${element.y}px;width:${element.width}px;height:${element.height}px;font-size:${element.fontSize}px;font-family:${element.fontFamily};color:${element.color};font-weight:${element.fontWeight};text-align:${element.textAlign};border:2px solid transparent;cursor:move;padding:4px;outline:none;" onblur="TemplatesPage.updateVisualTextContent('${element.id}', this.textContent)">${element.content}</div>`;
         break;
       case 'image':
         html = `<img id="${element.id}" src="${element.src}" style="position:absolute;left:${element.x}px;top:${element.y}px;width:${element.width}px;height:${element.height}px;border:2px solid transparent;cursor:move;object-fit:cover;">`;
