@@ -1,38 +1,33 @@
 const express = require('express');
 const router = express.Router();
-
-// Mock contacts data - including user's email for testing
-let mockContacts = [
-  { _id: '1', name: 'John Doe', email: 'john@example.com', company: 'Tech Corp', phone: '555-0101', createdAt: new Date('2024-03-28') },
-  { _id: '2', name: 'Jane Smith', email: 'jane@example.com', company: 'Design Inc', phone: '555-0102', createdAt: new Date('2024-03-27') },
-  { _id: '3', name: 'Uma Sankari', email: 'umasankari0246@gmail.com', company: 'SHOWBAY Testing', phone: '555-0103', createdAt: new Date('2024-03-26') },
-  { _id: '4', name: 'Alice Brown', email: 'alice@example.com', company: 'Sales Co', phone: '555-0104', createdAt: new Date('2024-03-25') },
-  { _id: '5', name: 'Charlie Wilson', email: 'charlie@example.com', company: 'Consulting Ltd', phone: '555-0105', createdAt: new Date('2024-03-24') }
-];
-
-let nextId = 6;
+const Contact = require('../models/Contact');
 
 // Get all contacts
 router.get('/', async (req, res) => {
   try {
     const { search, page = 1, limit = 50 } = req.query;
-    let filtered = mockContacts;
+    let query = {};
     
     if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = mockContacts.filter(c => 
-        c.name.toLowerCase().includes(searchLower) ||
-        c.email.toLowerCase().includes(searchLower) ||
-        c.company.toLowerCase().includes(searchLower)
-      );
+      query = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { company: { $regex: search, $options: 'i' } }
+        ]
+      };
     }
     
-    const total = filtered.length;
-    const start = (page - 1) * limit;
-    const contacts = filtered.slice(start, start + Number(limit));
+    const contacts = await Contact.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+    
+    const total = await Contact.countDocuments(query);
     
     res.json({ contacts, total, page: Number(page), pages: Math.ceil(total / limit) });
   } catch (err) {
+    console.error('Error fetching contacts:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -40,75 +35,158 @@ router.get('/', async (req, res) => {
 // Get single contact
 router.get('/:id', async (req, res) => {
   try {
-    const contact = mockContacts.find(c => c._id === req.params.id);
+    const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
     res.json(contact);
   } catch (err) {
+    console.error('Error fetching contact:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Create contact
+// Create new contact
 router.post('/', async (req, res) => {
   try {
-    const newContact = {
-      _id: String(nextId++),
-      ...req.body,
-      createdAt: new Date()
-    };
-    mockContacts.unshift(newContact);
-    res.status(201).json(newContact);
+    const { name, email, company, phone, tags } = req.body;
+    
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+
+    // Check if contact with email already exists
+    const existingContact = await Contact.findOne({ email: email.toLowerCase() });
+    if (existingContact) {
+      return res.status(400).json({ error: 'Contact with this email already exists' });
+    }
+
+    const contact = new Contact({
+      name,
+      email: email.toLowerCase(),
+      company: company || '',
+      phone: phone || '',
+      tags: Array.isArray(tags) ? tags : []
+    });
+
+    await contact.save();
+    res.status(201).json(contact);
   } catch (err) {
-    res.status(400).json({ error: 'Invalid data' });
+    console.error('Error creating contact:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Update contact
 router.put('/:id', async (req, res) => {
   try {
-    const index = mockContacts.findIndex(c => c._id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'Not found' });
+    const { name, email, company, phone, tags } = req.body;
     
-    mockContacts[index] = { ...mockContacts[index], ...req.body };
-    res.json(mockContacts[index]);
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) {
+      // Check if email is being changed and if new email already exists
+      const existingContact = await Contact.findOne({ 
+        email: email.toLowerCase(),
+        _id: { $ne: req.params.id }
+      });
+      if (existingContact) {
+        return res.status(400).json({ error: 'Contact with this email already exists' });
+      }
+      updateData.email = email.toLowerCase();
+    }
+    if (company !== undefined) updateData.company = company;
+    if (phone !== undefined) updateData.phone = phone;
+    if (tags !== undefined) updateData.tags = Array.isArray(tags) ? tags : [];
+
+    const contact = await Contact.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!contact) return res.status(404).json({ error: 'Contact not found' });
+    res.json(contact);
   } catch (err) {
-    res.status(400).json({ error: 'Invalid data' });
+    console.error('Error updating contact:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Delete contact
 router.delete('/:id', async (req, res) => {
   try {
-    const index = mockContacts.findIndex(c => c._id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'Not found' });
-    
-    mockContacts.splice(index, 1);
-    res.json({ success: true });
+    const contact = await Contact.findByIdAndDelete(req.params.id);
+    if (!contact) return res.status(404).json({ error: 'Contact not found' });
+    res.json({ message: 'Contact deleted successfully' });
   } catch (err) {
+    console.error('Error deleting contact:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Delete multiple
+// Delete multiple contacts
 router.post('/delete-many', async (req, res) => {
   try {
     const { ids } = req.body;
-    mockContacts = mockContacts.filter(c => !ids.includes(c._id));
-    res.json({ success: true });
+    const result = await Contact.deleteMany({ _id: { $in: ids } });
+    res.json({ message: `Deleted ${result.deletedCount} contacts successfully` });
   } catch (err) {
+    console.error('Error deleting contacts:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Upload CSV/Excel (mock)
-router.post('/upload', (req, res) => {
-  res.json({ 
-    success: true, 
-    imported: 10, 
-    skipped: 2, 
-    errors: ['invalid@email.com', 'duplicate@email.com'] 
-  });
+// Bulk import contacts
+router.post('/bulk', async (req, res) => {
+  try {
+    const { contacts } = req.body;
+    
+    if (!Array.isArray(contacts) || contacts.length === 0) {
+      return res.status(400).json({ error: 'Contacts array is required' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < contacts.length; i++) {
+      const contactData = contacts[i];
+      
+      if (!contactData.name || !contactData.email) {
+        errors.push({ row: i + 1, error: 'Name and email are required' });
+        continue;
+      }
+
+      try {
+        // Check if contact already exists
+        const existingContact = await Contact.findOne({ email: contactData.email.toLowerCase() });
+        if (existingContact) {
+          errors.push({ row: i + 1, error: 'Contact with this email already exists' });
+          continue;
+        }
+
+        const contact = new Contact({
+          name: contactData.name,
+          email: contactData.email.toLowerCase(),
+          company: contactData.company || '',
+          phone: contactData.phone || '',
+          tags: Array.isArray(contactData.tags) ? contactData.tags : []
+        });
+
+        await contact.save();
+        results.push(contact);
+      } catch (err) {
+        errors.push({ row: i + 1, error: err.message });
+      }
+    }
+
+    res.status(201).json({
+      message: `Successfully imported ${results.length} contacts`,
+      imported: results,
+      errors: errors
+    });
+  } catch (err) {
+    console.error('Error bulk importing contacts:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 module.exports = router;
-module.exports.mockContacts = mockContacts;

@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Shared user data (same as in settings)
 let mockUsers = [
-  { _id: 'admin-001', name: 'Admin', email: 'admin@showbay.com', password: 'showbay2024', role: 'admin' }
+  { _id: 'admin-001', name: 'Admin', email: 'admin@showbay.io', password: 'showbay2024', role: 'admin' }
 ];
 
 // Simple password comparison
@@ -55,7 +55,7 @@ router.get('/me', (req, res) => {
 
 // Seed default admin (run once)
 router.post('/seed', async (req, res) => {
-  res.json({ message: 'Admin credentials: admin@showbay.com / showbay2024' });
+  res.json({ message: 'Admin credentials: admin@showbay.io / showbay2024' });
 });
 
 // Export functions for use in other routes

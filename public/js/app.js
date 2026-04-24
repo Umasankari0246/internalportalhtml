@@ -1,3 +1,27 @@
+// Global redirect function for SHOWBAY website
+function redirectToShowbay() {
+  console.log('Redirecting to https://showbay.io/');
+  // Try the main URL first, if it redirects incorrectly, we can try alternatives
+  window.open('https://showbay.io/', '_blank');
+}
+
+// Alternative redirect function with different URLs to try
+function redirectToShowbayAlternative() {
+  console.log('Trying alternative SHOWBAY URLs...');
+  const urls = [
+    'https://showbay.io/',
+    'https://www.showbay.io/',
+    'https://showbay.io/',
+    'https://www.showbay.io/'
+  ];
+  
+  // Try the first URL
+  window.open(urls[0], '_blank');
+}
+
+// Make it globally accessible
+window.redirectToShowbay = redirectToShowbay;
+
 // ===== MAIN APP CONTROLLER =====
 const App = {
   currentPage: 'dashboard',
@@ -32,6 +56,23 @@ const App = {
       await fetch('/auth/logout', { method: 'POST' });
       window.location.href = '/login';
     });
+
+    // Add click handlers for buttons that should redirect to SHOWBAY
+    function addShowbayRedirects() {
+      // Add redirect to any buttons with specific classes or IDs
+      const redirectButtons = document.querySelectorAll('[data-redirect="showbay"]');
+      console.log('Found redirect buttons:', redirectButtons.length);
+      redirectButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          console.log('Button clicked, redirecting to showbay.io');
+          e.preventDefault();
+          e.stopPropagation();
+          window.redirectToShowbay();
+        });
+      });
+    }
+
+    addShowbayRedirects();
 
     // Modal close
     document.getElementById('modalClose').addEventListener('click', () => this.closeModal());

@@ -1,29 +1,50 @@
 const express = require('express');
 const router = express.Router();
+const Campaign = require('../models/Campaign');
+const Template = require('../models/Template');
+const Contact = require('../models/Contact');
 
-// Mock dashboard data
+// Real dashboard data from MongoDB
 router.get('/', async (req, res) => {
   try {
-    const mockStats = {
-      contacts: 1247,
-      templates: 23,
-      campaigns: 89,
-      emailsSent: 15420
+    // Fetch real data from MongoDB
+    const [contactsCount, templatesCount, campaigns, recentCampaignsList] = await Promise.all([
+      Contact.countDocuments(),
+      Template.countDocuments(),
+      Campaign.find(),
+      Campaign.find().populate('templateId', 'name').sort({ createdAt: -1 }).limit(5)
+    ]);
+
+    // Calculate total emails sent
+    const emailsSent = campaigns.reduce((total, campaign) => total + (campaign.sentCount || 0), 0);
+
+    // Format recent campaigns for display
+    const recentCampaigns = recentCampaignsList.map(campaign => ({
+      _id: campaign._id,
+      name: campaign.name,
+      subject: campaign.subject,
+      status: campaign.status,
+      sentCount: campaign.sentCount || 0,
+      failedCount: campaign.failedCount || 0,
+      templateId: campaign.templateId,
+      createdAt: campaign.createdAt,
+      scheduledAt: campaign.scheduledAt,
+      isScheduled: campaign.isScheduled || false
+    }));
+
+    const stats = {
+      contacts: contactsCount,
+      templates: templatesCount,
+      campaigns: campaigns.length,
+      emailsSent: emailsSent
     };
 
-    const mockRecentCampaigns = [
-      { _id: '1', name: 'Summer Newsletter', status: 'sent', sentCount: 1247, createdAt: new Date('2024-03-28') },
-      { _id: '2', name: 'Product Launch', status: 'draft', sentCount: 0, createdAt: new Date('2024-03-27') },
-      { _id: '3', name: 'Welcome Series', status: 'active', sentCount: 892, createdAt: new Date('2024-03-26') },
-      { _id: '4', name: 'Event Invitation', status: 'sent', sentCount: 534, createdAt: new Date('2024-03-25') },
-      { _id: '5', name: 'Monthly Update', status: 'scheduled', sentCount: 0, createdAt: new Date('2024-03-24') }
-    ];
-
     res.json({
-      stats: mockStats,
-      recentCampaigns: mockRecentCampaigns
+      stats: stats,
+      recentCampaigns: recentCampaigns
     });
   } catch (err) {
+    console.error('Error fetching dashboard data:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

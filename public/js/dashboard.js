@@ -7,7 +7,7 @@ const DashboardPage = {
       const { stats, recentCampaigns } = data;
 
       const statusBadge = (s) => {
-        const map = { sent: 'success', sending: 'warning', failed: 'danger', draft: 'muted' };
+        const map = { sent: 'success', sending: 'warning', failed: 'danger', draft: 'muted', scheduled: 'info' };
         return `<span class="badge badge-${map[s] || 'muted'}">${s}</span>`;
       };
 
@@ -68,12 +68,17 @@ const DashboardPage = {
               <tbody>
                 ${recentCampaigns.map(c => `
                   <tr>
-                    <td><strong>${c.name}</strong><br><span class="text-muted" style="font-size:11px">${c.subject}</span></td>
+                    <td><strong>${c.name}</strong><br><span class="text-muted" style="font-size:11px">${c.subject || 'No subject'}</span></td>
                     <td>${c.templateId?.name || '<span class="text-muted">N/A</span>'}</td>
                     <td>${statusBadge(c.status)}</td>
                     <td class="text-success">${c.sentCount}</td>
                     <td class="${c.failedCount > 0 ? 'text-danger' : 'text-muted'}">${c.failedCount}</td>
-                    <td class="text-muted">${new Date(c.createdAt).toLocaleDateString()}</td>
+                    <td class="text-muted">
+                      ${c.scheduledAt && c.status === 'scheduled' 
+                        ? `Scheduled: ${new Date(c.scheduledAt).toLocaleDateString()}` 
+                        : new Date(c.createdAt).toLocaleDateString()
+                      }
+                    </td>
                   </tr>`).join('')}
               </tbody>
             </table>

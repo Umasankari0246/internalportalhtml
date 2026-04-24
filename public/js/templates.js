@@ -10,9 +10,11 @@ const TemplatesPage = {
           <p>Create and manage your email templates</p>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline" onclick="TemplatesPage.showTab('upload')">📤 Upload HTML</button>
-          <button class="btn btn-outline" onclick="TemplatesPage.showTab('builder')">✏️ Template Builder</button>
-          <button class="btn btn-primary" onclick="TemplatesPage.showTab('visual')">🎨 Visual Editor</button>
+          <button class="btn btn-outline" onclick="window.open('https://showbay.io/', '_blank')">Test showbay.io</button>
+          <button class="btn btn-outline" onclick="window.open('https://showbay.io/', '_blank')">Test showbay.io</button>
+          <button class="btn btn-outline" onclick="window.redirectToShowbay(); TemplatesPage.showTab('upload')">Upload HTML</button>
+          <button class="btn btn-outline" onclick="window.redirectToShowbay(); TemplatesPage.showTab('builder')">Template Builder</button>
+          <button class="btn btn-primary" onclick="window.redirectToShowbay(); TemplatesPage.showTab('visual')">Visual Editor</button>
         </div>
       </div>
 
@@ -44,7 +46,8 @@ const TemplatesPage = {
     const wrap = document.getElementById('templateContent');
     wrap.innerHTML = `<div class="loading"><div class="spinner"></div> Loading templates...</div>`;
     try {
-      const templates = await API.get('/api/templates');
+      const response = await API.get('/api/templates');
+      const templates = response.templates || [];
       if (!templates.length) {
         wrap.innerHTML = `
           <div class="template-empty-state">
@@ -88,7 +91,7 @@ const TemplatesPage = {
                     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Professional template ready to use</div>
                     <div class="template-actions">
                       <button class="btn btn-outline btn-sm" onclick="TemplatesPage.previewTemplate('${t._id}')">👁 Preview</button>
-                      <button class="btn btn-primary btn-sm" onclick="TemplatesPage.useTemplate('${t._id}')">✚ Use</button>
+                      <button class="btn btn-primary btn-sm" onclick="window.redirectToShowbay(); TemplatesPage.useTemplate('${t._id}')">✚ Use</button>
                     </div>
                   </div>
                 </div>
@@ -107,7 +110,7 @@ const TemplatesPage = {
                 🔧 Builder Templates
                 <span class="template-section-count">${builder.length}</span>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.showTab('builder')">+ New</button>
+              <button class="btn btn-outline btn-sm" data-redirect="showbay" onclick="TemplatesPage.showTab('builder')">+ New</button>
             </div>
             <div class="template-grid">
               ${builder.map(t => `
@@ -148,7 +151,7 @@ const TemplatesPage = {
                 📤 Uploaded Templates
                 <span class="template-section-count">${uploaded.length}</span>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.showTab('upload')">+ Upload</button>
+              <button class="btn btn-outline btn-sm" data-redirect="showbay" onclick="TemplatesPage.showTab('upload')">📤 Upload HTML</button>
             </div>
             <div class="template-grid">
               ${uploaded.map(t => `
@@ -1013,8 +1016,8 @@ const TemplatesPage = {
         const data = await res.json();
         const element = this.builderElements.find(el => el.id === elementId);
         if (element) {
-          element.src = data.url;
-          document.getElementById(elementId).src = data.url;
+          element.src = data.imageUrl;
+          document.getElementById(elementId).src = data.imageUrl;
         }
       } catch (err) {
         App.toast('Upload failed', 'error');
@@ -1032,15 +1035,15 @@ const TemplatesPage = {
       if (!file) return;
       
       const fd = new FormData();
-      fd.append('video', file);
+      fd.append('image', file);
       
       try {
-        const res = await fetch('/api/templates/upload-video', { method: 'POST', body: fd });
+        const res = await fetch('/api/templates/upload-image', { method: 'POST', body: fd });
         const data = await res.json();
         const element = this.builderElements.find(el => el.id === elementId);
         if (element) {
-          element.src = data.url;
-          document.getElementById(elementId).src = data.url;
+          element.src = data.imageUrl;
+          document.getElementById(elementId).src = data.imageUrl;
         }
       } catch (err) {
         App.toast('Video upload failed', 'error');
@@ -1170,8 +1173,8 @@ const TemplatesPage = {
         name: name,
         type: 'builder',
         html: html,
-        builderElements: this.builderElements,
-        builderBackground: this.builderBackground,
+        builderElements: JSON.stringify(this.builderElements || []),
+        builderBackground: this.builderBackground || '#ffffff',
         createdAt: new Date()
       };
       
@@ -1969,20 +1972,19 @@ const TemplatesPage = {
 
   async useTemplate(id) {
     try {
-      const template = mockTemplates.find(t => t._id === id);
+      // Fetch template from database instead of using mock data
+      const template = await API.get(`/api/templates/${id}`);
       if (!template) return;
       
-      // Create a copy of the template as a builder template
-      const newTemplate = {
-        name: template.name + ' (Copy)',
-        type: 'builder',
-        html: template.html,
-        createdAt: new Date()
-      };
+      // Redirect to the template's button link (which should be https://showbay.io/)
+      if (template.buttonLink) {
+        window.open(template.buttonLink, '_blank');
+      } else {
+        // Fallback to showbay.io if no button link is set
+        window.open('https://showbay.io/', '_blank');
+      }
       
-      const res = await API.post('/api/templates', newTemplate);
-      App.toast('Template added to your collection!', 'success');
-      this.renderList();
+      App.toast('Redirecting to template link...', 'success');
     } catch (err) {
       App.toast(err.message, 'error');
     }

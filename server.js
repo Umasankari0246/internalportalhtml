@@ -2,12 +2,25 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Mock MongoDB connection for now (will be replaced later)
-console.log('📧 SHOWBAY Email Marketing System starting...');
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/showbay', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log(' MongoDB connected successfully');
+  console.log(' SHOWBAY Email Marketing System starting...');
+})
+.catch((err) => {
+  console.error(' MongoDB connection error:', err);
+  process.exit(1);
+});
 
 // Middleware
 app.use(express.json());
@@ -15,15 +28,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Session (using memory store for now)
+// Session using MongoDB store
 app.use(session({
   secret: process.env.SESSION_SECRET || 'showbay-secret-key-2024',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 60 * 8 } // 8 hours
+  cookie: { maxAge: 1000 * 60 * 60 * 8 }, // 8 hours
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/showbay',
+    collectionName: 'sessions'
+  })
 }));
 
-// Mock routes (will be implemented properly when MongoDB is available)
+// API routes with MongoDB integration
 app.use('/auth', require('./routes/auth'));
 app.use('/api/contacts', require('./routes/contacts'));
 app.use('/api/templates', require('./routes/templates'));

@@ -9,7 +9,7 @@ let mockSettings = {
   smtpPort: 587,
   senderEmail: 'umasankari0246@gmail.com',
   senderName: 'SHOWBAY Events',
-  appPassword: 'bkbd sbnh hkxm dyuf', // User's app password
+  appPassword: '', // User's app password (removed for security)
   updatedAt: new Date('2024-03-28')
 };
 
@@ -58,7 +58,7 @@ router.post('/change-password', async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     // Find the user (using shared user data)
-    const user = mockUsers.find(u => u.email === 'admin@showbay.com');
+    const user = mockUsers.find(u => u.email === 'admin@showbay.io');
     if (!user) {
       return res.status(400).json({ error: 'User not found' });
     }

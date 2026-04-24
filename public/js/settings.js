@@ -35,7 +35,7 @@ const SettingsPage = {
 
               <div class="form-group">
                 <label>Sender Email *</label>
-                <input type="email" id="st_senderEmail" value="${this.esc(settings.senderEmail || '')}" placeholder="marketing@showbay.com">
+                <input type="email" id="st_senderEmail" value="${this.esc(settings.senderEmail || '')}" placeholder="marketing@showbay.io">
               </div>
 
               <div class="form-group">

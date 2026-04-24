@@ -3,12 +3,15 @@ const mongoose = require('mongoose');
 const templateSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, enum: ['builder', 'upload'], default: 'builder' },
-  // Builder fields
+  // Legacy builder fields
   title: String,
   bodyContent: String,
   imageUrl: String,
   buttonText: String,
   buttonLink: String,
+  // Visual builder fields
+  builderElements: [mongoose.Schema.Types.Mixed],
+  builderBackground: String,
   // Final HTML
   html: { type: String, required: true },
   // For uploaded templates
