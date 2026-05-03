@@ -1,0 +1,38 @@
+services:
+  # Web Service
+  - type: web
+    name: showbay-email-marketing
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+        
+    # Auto-deploy from main branch
+    autoDeploy: true
+    
+    # Build and runtime settings
+    buildFilter:
+      paths:
+        - "!node_modules/**"
+        - "!.git/**"
+        - "!uploads/**"
+        - "!logs/**"
+        
+    # Performance settings
+    disk:
+      name: showbay-disk
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
+      
+# Databases (MongoDB Atlas recommended for production)
+databases:
+  - name: showbay-mongodb
+    plan: free
