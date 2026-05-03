@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Shared user data (same as in settings)
 let mockUsers = [
-  { _id: 'admin-001', name: 'Admin', email: 'admin@showbay.io', password: 'showbay2024', role: 'admin' }
+  { _id: 'admin-001', name: 'Admin', email: 'admin@showbay.io', password: process.env.ADMIN_PASSWORD || 'showbay2024', role: 'admin' }
 ];
 
 // Simple password comparison

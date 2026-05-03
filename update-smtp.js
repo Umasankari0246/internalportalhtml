@@ -27,7 +27,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SENDER_EMAIL=umasankari0246@gmail.com
 SENDER_NAME=SHOWBAY Email Marketing
-APP_PASSWORD=
+APP_PASSWORD=fdqs qbjx xubf xrxp
 `;
 
 // Write updated .env file
@@ -35,5 +35,5 @@ fs.writeFileSync('.env', smtpConfig);
 
 console.log('✅ SMTP configuration updated successfully!');
 console.log('📧 Email: umasankari0246@gmail.com');
-console.log('🔑 Password: [REMOVED FOR SECURITY]');
+console.log('🔑 Password: fdqs qbjx xubf xrxp');
 console.log('🔄 Please restart the server to apply changes.');

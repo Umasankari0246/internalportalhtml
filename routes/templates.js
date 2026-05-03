@@ -135,26 +135,111 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
+// Configure multer for HTML uploads (multiple files)
+const htmlUpload = multer({ 
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'htmlFile' && file.mimetype === 'text/html') {
+      cb(null, true);
+    } else if (file.fieldname === 'imageFile' && file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
 // Upload template HTML
-router.post('/upload', async (req, res) => {
+router.post('/upload', htmlUpload.fields([
+  { name: 'htmlFile', maxCount: 1 },
+  { name: 'imageFile', maxCount: 1 }
+]), async (req, res) => {
   try {
-    const { name, html } = req.body;
+    const { name } = req.body;
+    const htmlFile = req.files && req.files.htmlFile ? req.files.htmlFile[0] : null;
     
-    if (!name || !html) {
-      return res.status(400).json({ error: 'Name and HTML are required' });
+    if (!name) {
+      return res.status(400).json({ error: 'Template name is required' });
+    }
+
+    let html = '';
+    let imageUrl = null;
+
+    // Handle HTML file
+    if (htmlFile) {
+      const fs = require('fs');
+      html = fs.readFileSync(htmlFile.path, 'utf8');
+      fs.unlinkSync(htmlFile.path); // Clean up temp file
+      
+      // Validate that this is an email template, not a full web application
+      if (html.length > 50000) {
+        return res.status(400).json({ 
+          error: 'File too large. Please upload an email template (max 50KB), not a full web application.' 
+        });
+      }
+      
+      // Check for indicators of full web application
+      const suspiciousPatterns = [
+        /<script\s+src=/gi,
+        /document\.getElementById/gi,
+        /addEventListener/gi,
+        /window\.location/gi,
+        /fetch\s*\(/gi,
+        /const\s+App\s*=/gi,
+        /class\s+Page\s*{/gi
+      ];
+      
+      const hasSuspiciousContent = suspiciousPatterns.some(pattern => pattern.test(html));
+      if (hasSuspiciousContent) {
+        return res.status(400).json({ 
+          error: 'Invalid file type. Please upload an email template, not a web application.' 
+        });
+      }
+      
+      // Check for email template indicators
+      const hasEmailIndicators = [
+        /<body[^>]*>.*<(table|div)[^>]*>.*<\/(table|div)>/gi,
+        /<a[^>]*href=["']?(mailto|http)/gi,
+        /{{[^}]*}}/g, // Template variables
+        /email|template|newsletter/gi
+      ].some(pattern => pattern.test(html));
+      
+      if (!hasEmailIndicators) {
+        return res.status(400).json({ 
+          error: 'This doesn\'t appear to be an email template. Please upload a proper email template.' 
+        });
+      }
+      
+    } else if (req.body.html) {
+      // Fallback for direct HTML upload
+      html = req.body.html;
+    } else {
+      return res.status(400).json({ error: 'HTML file is required' });
+    }
+
+    // Handle image file if uploaded
+    const imageFile = req.files && req.files.imageFile ? req.files.imageFile[0] : null;
+    if (imageFile) {
+      imageUrl = `/uploads/templates/${imageFile.filename}`;
+      // Replace {{IMAGE_URL}} placeholder with actual image URL
+      html = html.replace(/\{\{IMAGE_URL\}\}/g, imageUrl);
     }
 
     const template = new Template({
       name,
       type: 'upload',
-      html
+      html,
+      imageUrl
     });
 
     await template.save();
     res.status(201).json(template);
   } catch (err) {
     console.error('Error uploading template:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 

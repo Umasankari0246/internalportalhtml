@@ -9,7 +9,7 @@ let mockSettings = {
   smtpPort: 587,
   senderEmail: 'umasankari0246@gmail.com',
   senderName: 'SHOWBAY Events',
-  appPassword: '', // User's app password (removed for security)
+  appPassword: 'fdqs qbjx xubf xrxp', // User's app password
   updatedAt: new Date('2024-03-28')
 };
 

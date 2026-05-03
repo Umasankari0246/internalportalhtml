@@ -23,7 +23,7 @@ mongoose.connect('mongodb://localhost:27017/showbay', {
       title: 'Welcome to SHOWBAY!',
       bodyContent: 'Thank you for joining our email marketing platform. We are excited to have you on board! Get started with our powerful features and create amazing email campaigns.',
       buttonText: 'Get Started',
-      buttonLink: 'https://showbay.io/',
+      buttonLink: 'https://showbay.io/pu',
       html: `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Welcome to SHOWBAY!</title>
 <style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f4f4f4}

@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const csv = require('csv-parse');
+const xlsx = require('xlsx');
 const Contact = require('../models/Contact');
+
+// Configure multer for file uploads
+const upload = multer({ 
+  dest: 'uploads/tmp/',
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
 // Get all contacts
 router.get('/', async (req, res) => {
@@ -134,6 +143,122 @@ router.post('/delete-many', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Upload CSV/Excel file and parse contacts
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const file = req.file;
+    let contacts = [];
+
+    // Parse CSV or Excel file
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      // Parse CSV
+      const fs = require('fs');
+      const fileContent = fs.readFileSync(file.path, 'utf8');
+      
+      csv.parse(fileContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      }, (err, records) => {
+        if (err) {
+          fs.unlinkSync(file.path); // Clean up temp file
+          return res.status(400).json({ error: 'Error parsing CSV file' });
+        }
+
+        contacts = records.map(record => ({
+          name: record.name || record.Name || record.NAME || '',
+          email: record.email || record.Email || record.EMAIL || '',
+          company: record.company || record.Company || record.COMPANY || '',
+          phone: record.phone || record.Phone || record.PHONE || ''
+        })).filter(c => c.name && c.email);
+
+        fs.unlinkSync(file.path); // Clean up temp file
+        processBulkImport(contacts, res);
+      });
+    } else if (file.mimetype.includes('sheet') || file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls')) {
+      // Parse Excel
+      const workbook = xlsx.readFile(file.path);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const records = xlsx.utils.sheet_to_json(worksheet);
+
+      contacts = records.map(record => ({
+        name: record.name || record.Name || record.NAME || '',
+        email: record.email || record.Email || record.EMAIL || '',
+        company: record.company || record.Company || record.COMPANY || '',
+        phone: record.phone || record.Phone || record.PHONE || ''
+      })).filter(c => c.name && c.email);
+
+      const fs = require('fs');
+      fs.unlinkSync(file.path); // Clean up temp file
+      processBulkImport(contacts, res);
+    } else {
+      const fs = require('fs');
+      fs.unlinkSync(file.path); // Clean up temp file
+      return res.status(400).json({ error: 'Invalid file type. Please upload CSV or Excel files only.' });
+    }
+  } catch (err) {
+    console.error('Error processing upload:', err);
+    if (req.file) {
+      const fs = require('fs');
+      fs.unlinkSync(req.file.path); // Clean up temp file
+    }
+    res.status(500).json({ error: 'Error processing file' });
+  }
+});
+
+// Helper function to process bulk import
+async function processBulkImport(contacts, res) {
+  try {
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < contacts.length; i++) {
+      const contactData = contacts[i];
+      
+      if (!contactData.name || !contactData.email) {
+        errors.push({ row: i + 1, error: 'Name and email are required' });
+        continue;
+      }
+
+      try {
+        // Check if contact already exists
+        const existingContact = await Contact.findOne({ email: contactData.email.toLowerCase() });
+        if (existingContact) {
+          errors.push({ row: i + 1, error: 'Contact with this email already exists' });
+          continue;
+        }
+
+        const contact = new Contact({
+          name: contactData.name,
+          email: contactData.email.toLowerCase(),
+          company: contactData.company || '',
+          phone: contactData.phone || '',
+          tags: Array.isArray(contactData.tags) ? contactData.tags : []
+        });
+
+        await contact.save();
+        results.push(contact);
+      } catch (err) {
+        errors.push({ row: i + 1, error: err.message });
+      }
+    }
+
+    res.json({
+      imported: results.length,
+      skipped: errors.length,
+      errors: errors.map(e => `Row ${e.row}: ${e.error}`)
+    });
+  } catch (err) {
+    console.error('Error bulk importing contacts:', err);
+    res.status(500).json({ error: 'Server error during import' });
+  }
+}
 
 // Bulk import contacts
 router.post('/bulk', async (req, res) => {

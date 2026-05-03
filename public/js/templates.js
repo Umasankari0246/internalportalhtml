@@ -10,17 +10,17 @@ const TemplatesPage = {
           <p>Create and manage your email templates</p>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline" onclick="window.open('https://showbay.io/', '_blank')">Test showbay.io</button>
-          <button class="btn btn-outline" onclick="window.open('https://showbay.io/', '_blank')">Test showbay.io</button>
-          <button class="btn btn-outline" onclick="window.redirectToShowbay(); TemplatesPage.showTab('upload')">Upload HTML</button>
-          <button class="btn btn-outline" onclick="window.redirectToShowbay(); TemplatesPage.showTab('builder')">Template Builder</button>
-          <button class="btn btn-primary" onclick="window.redirectToShowbay(); TemplatesPage.showTab('visual')">Visual Editor</button>
+          <button class="btn btn-outline" onclick="TemplatesPage.showTab('upload')">Upload HTML</button>
+          <button class="btn btn-outline" onclick="TemplatesPage.showTab('builder')">Template Builder</button>
+          <button class="btn btn-outline" onclick="TemplatesPage.showTab('code')">Code Editor</button>
+          <button class="btn btn-primary" onclick="TemplatesPage.showTab('visual')">Visual Editor</button>
         </div>
       </div>
 
       <div class="tabs">
         <div class="tab active" id="tab-list" onclick="TemplatesPage.showTab('list')">All Templates</div>
         <div class="tab" id="tab-builder" onclick="TemplatesPage.showTab('builder')">Builder</div>
+        <div class="tab" id="tab-code" onclick="TemplatesPage.showTab('code')">Code Editor</div>
         <div class="tab" id="tab-visual" onclick="TemplatesPage.showTab('visual')">Visual Editor</div>
         <div class="tab" id="tab-upload" onclick="TemplatesPage.showTab('upload')">Upload HTML</div>
       </div>
@@ -38,6 +38,7 @@ const TemplatesPage = {
 
     if (tab === 'list') this.renderList();
     else if (tab === 'builder') this.renderBuilder(null);
+    else if (tab === 'code') this.renderCodeEditor();
     else if (tab === 'visual') this.renderVisualEditor();
     else if (tab === 'upload') this.renderUpload();
   },
@@ -91,7 +92,7 @@ const TemplatesPage = {
                     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Professional template ready to use</div>
                     <div class="template-actions">
                       <button class="btn btn-outline btn-sm" onclick="TemplatesPage.previewTemplate('${t._id}')">👁 Preview</button>
-                      <button class="btn btn-primary btn-sm" onclick="window.redirectToShowbay(); TemplatesPage.useTemplate('${t._id}')">✚ Use</button>
+                      <button class="btn btn-primary btn-sm" onclick="TemplatesPage.useTemplate('${t._id}')">✚ Use</button>
                     </div>
                   </div>
                 </div>
@@ -110,7 +111,7 @@ const TemplatesPage = {
                 🔧 Builder Templates
                 <span class="template-section-count">${builder.length}</span>
               </div>
-              <button class="btn btn-outline btn-sm" data-redirect="showbay" onclick="TemplatesPage.showTab('builder')">+ New</button>
+              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.showTab('builder')">+ New</button>
             </div>
             <div class="template-grid">
               ${builder.map(t => `
@@ -151,7 +152,7 @@ const TemplatesPage = {
                 📤 Uploaded Templates
                 <span class="template-section-count">${uploaded.length}</span>
               </div>
-              <button class="btn btn-outline btn-sm" data-redirect="showbay" onclick="TemplatesPage.showTab('upload')">📤 Upload HTML</button>
+              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.showTab('upload')">📤 Upload HTML</button>
             </div>
             <div class="template-grid">
               ${uploaded.map(t => `
@@ -283,10 +284,11 @@ const TemplatesPage = {
   },
 
   initBuilderCanvas() {
-    this.builderElements = [];
-    this.selectedBuilderElement = null;
-    this.builderElementIdCounter = 0;
-    this.builderBackground = '#ffffff';
+    // Initialize builder properties
+    if (!this.builderElements) this.builderElements = [];
+    if (!this.selectedBuilderElement) this.selectedBuilderElement = null;
+    if (!this.builderElementIdCounter) this.builderElementIdCounter = 0;
+    if (!this.builderBackground) this.builderBackground = '#ffffff';
     
     // Add click handler to builder canvas
     const canvas = document.getElementById('builderCanvas');
@@ -1294,6 +1296,17 @@ const TemplatesPage = {
           Upload a pre-built <strong>.html</strong> file. Optionally upload an image to embed inside it.
           Use <code style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:2px;">{{IMAGE_URL}}</code> placeholder in your HTML to reference the uploaded image.
         </p>
+        
+        <div class="card" style="background:rgba(46,204,113,0.08);border-color:rgba(46,204,113,0.2);margin-bottom:20px;">
+          <div style="font-weight:700;color:var(--success);margin-bottom:8px;">📧 Email Template Examples</div>
+          <div style="font-size:12px;">
+            <div style="margin-bottom:8px;"><strong>Basic Template:</strong></div>
+            <button class="btn btn-outline btn-sm" onclick="TemplatesPage.showExample('basic')" style="margin-bottom:12px;">View Basic Example</button>
+            
+            <div style="margin-bottom:8px;"><strong>Newsletter Template:</strong></div>
+            <button class="btn btn-outline btn-sm" onclick="TemplatesPage.showExample('newsletter')">View Newsletter Example</button>
+          </div>
+        </div>
         <div class="form-group">
           <label>Template Name *</label>
           <input type="text" id="up_name" placeholder="e.g. Grand Gala Invite">
@@ -1408,12 +1421,621 @@ const TemplatesPage = {
     }
   },
 
+  renderCodeEditor() {
+    const wrap = document.getElementById('templateContent');
+    wrap.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;height:700px;">
+        <!-- Left: Code Editor -->
+        <div class="card" style="margin:0;display:flex;flex-direction:column;">
+          <div class="card-title" style="background:linear-gradient(135deg,var(--primary-blue),#2196f3);color:white;border-radius:8px 8px 0 0;">
+            💻 Code Editor
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.insertTemplate('basic')" style="border:1px solid white;color:white;">Basic Template</button>
+              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.insertTemplate('newsletter')" style="border:1px solid white;color:white;">Newsletter</button>
+            </div>
+          </div>
+          
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <!-- Template Name -->
+            <div style="padding:12px;border-bottom:1px solid var(--border);">
+              <div class="form-group" style="margin:0;">
+                <label>Template Name *</label>
+                <input type="text" id="codeTemplateName" placeholder="e.g. My Custom Template" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;">
+              </div>
+            </div>
+            
+            <!-- Code Tabs -->
+            <div style="display:flex;background:#f8f9fa;border-bottom:1px solid var(--border);">
+              <button class="code-tab active" id="htmlTab" onclick="TemplatesPage.switchCodeTab('html')">HTML</button>
+              <button class="code-tab" id="cssTab" onclick="TemplatesPage.switchCodeTab('css')">CSS</button>
+              <button class="code-tab" id="jsTab" onclick="TemplatesPage.switchCodeTab('js')">JavaScript</button>
+            </div>
+            
+            <!-- Code Editors -->
+            <div style="flex:1;position:relative;">
+              <textarea id="htmlEditor" class="code-editor active" placeholder="Write your HTML here..."><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; }
+        .header { background: #0a0e27; color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .button { background: #4fc3f7; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Title Here</h1>
+        </div>
+        <div class="content">
+            <p>Your content goes here...</p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="#" class="button">Click Me</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html></textarea>
+              <textarea id="cssEditor" class="code-editor" placeholder="Write your CSS here...">/* Additional CSS styles */
+body {
+    background: #f4f4f4;
+}
+.container {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}</textarea>
+              <textarea id="jsEditor" class="code-editor" placeholder="Write your JavaScript here...">// Interactive JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Template loaded');
+});</textarea>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right: Preview -->
+        <div class="card" style="margin:0;display:flex;flex-direction:column;">
+          <div class="card-title" style="background:linear-gradient(135deg,var(--primary-blue),#2196f3);color:white;border-radius:8px 8px 0 0;">
+            👁 Live Preview
+            <div style="margin-left:auto;">
+              <button class="btn btn-outline btn-sm" onclick="TemplatesPage.refreshPreview()" style="border:1px solid white;color:white;">🔄 Refresh</button>
+            </div>
+          </div>
+          <div style="flex:1;padding:16px;background:#f8f9fa;">
+            <iframe id="codePreview" class="preview-frame" style="width:100%;height:100%;border:1px solid var(--border);border-radius:4px;background:white;"></iframe>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div style="display:flex;gap:12px;margin-top:16px;">
+        <button class="btn btn-outline" onclick="TemplatesPage.previewCodeTemplate()">👁 Full Preview</button>
+        <button class="btn btn-primary" onclick="TemplatesPage.saveCodeTemplate()">💾 Save Template</button>
+      </div>
+      
+      <style>
+        .code-tab {
+          padding: 12px 24px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-bottom: 2px solid transparent;
+          transition: all 0.3s;
+        }
+        .code-tab.active {
+          background: white;
+          border-bottom-color: var(--primary-blue);
+          color: var(--primary-blue);
+          font-weight: 600;
+        }
+        .code-editor {
+          width: 100%;
+          height: 100%;
+          border: none;
+          padding: 16px;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-size: 13px;
+          line-height: 1.5;
+          resize: none;
+          display: none;
+          background: #fafafa;
+        }
+        .code-editor.active {
+          display: block;
+        }
+        .preview-frame {
+          width: 100%;
+          height: 100%;
+          border: 1px solid var(--border);
+          border-radius: 4px;
+        }
+      </style>
+    `;
+    
+    // Initialize preview
+    this.refreshPreview();
+    
+    // Add auto-refresh on code changes
+    ['htmlEditor', 'cssEditor', 'jsEditor'].forEach(id => {
+      const editor = document.getElementById(id);
+      if (editor) {
+        editor.addEventListener('input', () => this.refreshPreview());
+      }
+    });
+  },
+
+  switchCodeTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tab + 'Tab').classList.add('active');
+    
+    // Update code editors
+    document.querySelectorAll('.code-editor').forEach(e => e.classList.remove('active'));
+    document.getElementById(tab + 'Editor').classList.add('active');
+  },
+
+  refreshPreview() {
+    const html = document.getElementById('htmlEditor').value;
+    const css = document.getElementById('cssEditor').value;
+    const js = document.getElementById('jsEditor').value;
+    
+    const preview = document.getElementById('codePreview');
+    if (preview) {
+      const combinedCode = html.replace('</head>', 
+        `<style>${css}</style></head>`
+      ).replace('</body>', 
+        `<script>${js}</script></body>`
+      );
+      
+      preview.srcdoc = combinedCode;
+    }
+  },
+
+  insertTemplate(type) {
+    const templates = {
+      basic: {
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Email Template</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; }
+        .header { background: #0a0e27; color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .button { background: #4fc3f7; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome!</h1>
+        </div>
+        <div class="content">
+            <h2>Hello {{name}}</h2>
+            <p>Thank you for joining us. We're excited to have you on board!</p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="#" class="button">Get Started</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`,
+        css: `/* Additional styles */
+.container {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+}`,
+        js: `// Basic interactions
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Email template loaded');
+    const buttons = document.querySelectorAll('.button');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Button clicked!');
+        });
+    });
+});`
+      },
+      newsletter: {
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Template</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: Georgia, serif; background: #f8f9fa; }
+        .newsletter { max-width: 650px; margin: 20px auto; background: #fff; border-radius: 8px; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
+        .content { padding: 40px; }
+        .article { margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #eee; }
+        .article:last-child { border-bottom: none; }
+        .article h3 { color: #333; margin-bottom: 10px; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="newsletter">
+        <div class="header">
+            <h1>Monthly Newsletter</h1>
+            <p>Your dose of amazing content</p>
+        </div>
+        <div class="content">
+            <div class="article">
+                <h3>Feature Article Title</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <a href="#" style="color: #667eea;">Read more →</a>
+            </div>
+            <div class="article">
+                <h3>Another Interesting Topic</h3>
+                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <a href="#" style="color: #667eea;">Read more →</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Your Company. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+        css: `/* Newsletter styles */
+.newsletter {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.article h3 {
+    font-size: 20px;
+}
+.article a {
+    text-decoration: none;
+    font-weight: bold;
+}`,
+        js: `// Newsletter interactions
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Newsletter loaded');
+    const articles = document.querySelectorAll('.article a');
+    articles.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Article clicked:', this.textContent);
+        });
+    });
+});`
+      }
+    };
+    
+    const template = templates[type];
+    if (template) {
+      document.getElementById('htmlEditor').value = template.html;
+      document.getElementById('cssEditor').value = template.css;
+      document.getElementById('jsEditor').value = template.js;
+      this.refreshPreview();
+      App.toast(`${type.charAt(0).toUpperCase() + type.slice(1)} template inserted!`, 'success');
+    }
+  },
+
+  previewCodeTemplate() {
+    const html = document.getElementById('htmlEditor').value;
+    const css = document.getElementById('cssEditor').value;
+    const js = document.getElementById('jsEditor').value;
+    
+    const combinedCode = html.replace('</head>', 
+      `<style>${css}</style></head>`
+    ).replace('</body>', 
+      `<script>${js}</script></body>`
+    );
+    
+    const preview = window.open('', '_blank', 'width=800,height=600');
+    preview.document.write(combinedCode);
+    preview.document.close();
+  },
+
+  async saveCodeTemplate() {
+    const name = document.getElementById('codeTemplateName').value.trim();
+    const html = document.getElementById('htmlEditor').value;
+    const css = document.getElementById('cssEditor').value;
+    const js = document.getElementById('jsEditor').value;
+    
+    if (!name) return App.toast('Template name is required', 'error');
+    if (!html) return App.toast('HTML content is required', 'error');
+    
+    try {
+      // Combine HTML, CSS, and JS
+      const combinedHtml = html.replace('</head>', 
+        `<style>${css}</style></head>`
+      ).replace('</body>', 
+        `<script>${js}</script></body>`
+      );
+      
+      const templateData = {
+        name: name,
+        type: 'code',
+        html: combinedHtml,
+        css: css,
+        js: js,
+        createdAt: new Date()
+      };
+      
+      await API.post('/api/templates', templateData);
+      App.toast('Code template saved successfully!', 'success');
+      this.showTab('list');
+    } catch (err) {
+      App.toast(err.message, 'error');
+    }
+  },
+
+  showExample(type) {
+    const examples = {
+      basic: {
+        title: 'Basic Email Template',
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Email</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        .header { text-align: center; padding: 20px 0; }
+        .content { line-height: 1.6; }
+        .button { background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome!</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{name}},</p>
+            <p>Thank you for joining us. We're excited to have you on board!</p>
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="#" class="button">Get Started</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>`
+      },
+      newsletter: {
+        title: 'Newsletter Template',
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Newsletter</title>
+    <style>
+        body { font-family: Georgia, serif; margin: 0; padding: 20px; background: #f8f9fa; }
+        .newsletter { max-width: 650px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
+        .content { padding: 40px; }
+        .article { margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #eee; }
+        .article:last-child { border-bottom: none; }
+        .article h3 { color: #333; margin-bottom: 10px; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="newsletter">
+        <div class="header">
+            <h1>Monthly Newsletter</h1>
+            <p>Your dose of amazing content</p>
+        </div>
+        <div class="content">
+            <div class="article">
+                <h3>Feature Article Title</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <a href="#" style="color: #667eea;">Read more →</a>
+            </div>
+            <div class="article">
+                <h3>Another Interesting Topic</h3>
+                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <a href="#" style="color: #667eea;">Read more →</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Your Company. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`
+      }
+    };
+    
+    const example = examples[type];
+    if (example) {
+      App.showModal(example.title, `
+        <div style="padding:16px;">
+          <div style="margin-bottom:16px;">
+            <strong>This is a proper email template structure.</strong>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+              • Uses inline styles for email compatibility<br>
+              • Contains email-specific structure<br>
+              • Includes template variables like {{name}}<br>
+              • Optimized for email clients
+            </div>
+          </div>
+          <div style="background:#f8f9fa;padding:16px;border-radius:4px;margin-bottom:16px;">
+            <div style="font-weight:700;margin-bottom:8px;">HTML Code:</div>
+            <textarea style="width:100%;height:200px;font-family:monospace;font-size:12px;padding:8px;border:1px solid var(--border);border-radius:4px;">${example.html}</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="TemplatesPage.copyExample('${type}')">📋 Copy to Clipboard</button>
+        </div>
+      `);
+    }
+  },
+
+  copyExample(type) {
+    const examples = {
+      basic: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Email</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        .header { text-align: center; padding: 20px 0; }
+        .content { line-height: 1.6; }
+        .button { background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome!</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{name}},</p>
+            <p>Thank you for joining us. We're excited to have you on board!</p>
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="#" class="button">Get Started</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>`,
+      newsletter: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Newsletter</title>
+    <style>
+        body { font-family: Georgia, serif; margin: 0; padding: 20px; background: #f8f9fa; }
+        .newsletter { max-width: 650px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
+        .content { padding: 40px; }
+        .article { margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #eee; }
+        .article:last-child { border-bottom: none; }
+        .article h3 { color: #333; margin-bottom: 10px; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="newsletter">
+        <div class="header">
+            <h1>Monthly Newsletter</h1>
+            <p>Your dose of amazing content</p>
+        </div>
+        <div class="content">
+            <div class="article">
+                <h3>Feature Article Title</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <a href="#" style="color: #667eea;">Read more →</a>
+            </div>
+            <div class="article">
+                <h3>Another Interesting Topic</h3>
+                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <a href="#" style="color: #667eea;">Read more →</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Your Company. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`
+    };
+    
+    navigator.clipboard.writeText(examples[type]).then(() => {
+      App.toast('Example copied to clipboard!', 'success');
+    }).catch(() => {
+      App.toast('Failed to copy to clipboard', 'error');
+    });
+  },
+
   async previewTemplate(id) {
     try {
       const t = await API.get(`/api/templates/${id}`);
-      App.showModal(`Preview: ${t.name}`, `<iframe srcdoc="${this.esc(t.html)}" class="preview-frame" style="height:500px;"></iframe>`);
+      
+      // Ensure we have HTML content
+      if (!t.html) {
+        App.toast('Template has no HTML content', 'error');
+        return;
+      }
+      
+      // Create modal with enhanced iframe
+      const modalContent = `
+        <div style="padding:16px;">
+          <div style="margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+            Template Type: ${t.type || 'Unknown'} | HTML Length: ${t.html.length} chars
+          </div>
+          <iframe id="previewFrame" class="preview-frame" style="width:100%;height:500px;border:1px solid var(--border);border-radius:4px;background:white;"></iframe>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="TemplatesPage.debugPreview('${id}')">🔍 Debug</button>
+            <button class="btn btn-outline btn-sm" onclick="TemplatesPage.openPreviewInNewWindow('${id}')">🔗 Open in New Window</button>
+          </div>
+        </div>
+      `;
+      
+      App.showModal(`Preview: ${t.name}`, modalContent);
+      
+      // Set iframe content after modal is shown
+      setTimeout(() => {
+        const iframe = document.getElementById('previewFrame');
+        if (iframe) {
+          iframe.srcdoc = t.html;
+          
+          // Add error handling for iframe
+          iframe.onerror = function() {
+            console.error('Iframe loading error');
+            App.toast('Error loading preview', 'error');
+          };
+          
+          iframe.onload = function() {
+            console.log('Iframe loaded successfully');
+          };
+        }
+      }, 100);
+      
     } catch (err) {
-      App.toast(err.message, 'error');
+      console.error('Preview error:', err);
+      App.toast('Error loading preview: ' + err.message, 'error');
+    }
+  },
+
+  async debugPreview(id) {
+    try {
+      const t = await API.get(`/api/templates/${id}`);
+      console.log('Template data:', t);
+      console.log('HTML content:', t.html);
+      App.showModal('Debug Info', `
+        <div style="padding:16px;font-family:monospace;font-size:12px;max-height:400px;overflow:auto;">
+          <div><strong>Name:</strong> ${t.name}</div>
+          <div><strong>Type:</strong> ${t.type}</div>
+          <div><strong>HTML Length:</strong> ${t.html ? t.html.length : 0}</div>
+          <div><strong>First 200 chars:</strong></div>
+          <div style="background:#f5f5f5;padding:8px;border-radius:4px;margin-top:8px;">
+            ${t.html ? t.html.substring(0, 200) + '...' : 'No HTML'}
+          </div>
+        </div>
+      `);
+    } catch (err) {
+      App.toast('Debug error: ' + err.message, 'error');
+    }
+  },
+
+  async openPreviewInNewWindow(id) {
+    try {
+      const t = await API.get(`/api/templates/${id}`);
+      const preview = window.open('', '_blank', 'width=800,height=600');
+      preview.document.write(t.html);
+      preview.document.close();
+    } catch (err) {
+      App.toast('Error opening preview: ' + err.message, 'error');
     }
   },
 
